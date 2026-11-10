@@ -1,0 +1,26 @@
+name: Validar site estático
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Conferir estrutura e catálogo
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          for path in ('index.html','style.css','script.js','data/certificados.json','assets/gabriel-retrato.webp','assets/portfolio-gabriel-carvalho.pdf'):
+              assert Path(path).is_file(), f'Arquivo ausente: {path}'
+          data=json.loads(Path('data/certificados.json').read_text(encoding='utf-8'))
+          assert all(item.get('titulo') and item.get('url','').startswith('https://drive.google.com/') for item in data)
+          assert len(data) >= 100
+          print(f'Validação concluída: {len(data)} registros documentais')
+          PY
